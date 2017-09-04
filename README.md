@@ -3,7 +3,9 @@
 项目当前大部分功能通过了测试，但是微信api（server_api）部分未完全经过测试，且此模块未完整实现所有接口
 
 ### 操蛋的使用方法
->> 通用应用设置
+暂且是开发版本，只给出简单示例。
+
+> 通用应用设置
 ``` python
 # application config.py
 
@@ -33,7 +35,7 @@ app.add_config("client", Client(app.config))
 dino.add_config("database", MYSQL_CONNECTION)
 dino.add_config("app_base_url", "http://example.com")
 ```
->> 应用实现
+> 应用实现
 
 ``` python
 # application handlers.py
@@ -59,7 +61,7 @@ def settings(request):
 
 ```
 
->> web框架配置（此处为tornado）
+> web框架配置（此处为tornado）
 ``` python
 # application web.py
 
@@ -90,7 +92,21 @@ if __name__ == "__main__":
     tornado.ioloop.IOLoop.instance().start()
 ```
 
+> 定时刷新access_token
+怎么实现就不关我的事了，你可以crontab，或者celery定时任务每小时刷新一遍
+``` python
+# application refresh_token.py
 
+from .config import app
+
+def refresher():
+    app.config.client.refresh_access_token()
+
+if __name__ == "__main__":
+    refresher()
+```
+
+上面的示例代码直接copy去肯定无法运行，这个代码只是作为简单示例。
 
 ## License
 
