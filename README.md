@@ -70,7 +70,7 @@ import tornado.ioloop
 import tornado.httpserver
 from tornado.options import define, options
 
-from weixin.framwork.tornado import make_handler
+from weixin.framework.tornado import make_handler
 
 from .config import app
 from .handlers import* # 导入handlers

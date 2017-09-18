@@ -50,6 +50,12 @@ class _Storage_(object):
         """
         raise NotImplementedError
 
+    def get_ttl(self, key):
+        """
+        获取key的剩余存活秒数
+        """
+        raise NotImplementedError
+
     def serialize(self, dict, encoding="utf-8"):
         """
         将key值转换成字节类型
@@ -63,7 +69,7 @@ class _Storage_(object):
         """
         if not isinstance(byte, bytes):
             return
-        
+
         dict = msgpack.loads(byte, encoding=encoding)
         return dict
 
@@ -204,3 +210,22 @@ class _BaseSqlStorage_(_Storage_):
             result = not bool(cursor.fetchone())
 
         return result
+
+    def get_ttl(self, key):
+        """
+        获取key的剩余存活秒数
+        """
+        with self.database.cursor(self.Cursor) as cursor:
+            cursor.execute(self._escape_sql_args_formatter("""
+                SELECT `expired`
+                FROM `storage`
+                WHERE `key`=? AND `expired`>?
+                LIMIT 1;"""),
+                (key, get_timestamp()))
+
+            result = cursor.fetchone()
+
+        if not result: return -1
+        
+        ttl = int(result[0]) - get_timestamp()
+        return int(ttl)

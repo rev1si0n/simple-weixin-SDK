@@ -49,7 +49,8 @@ class Weechat(object):
                 appid=self.config.appid,
                 token=self.config.token,
                 enc_aeskey=enc_aeskey
-                ))
+                )
+            )
 
     def add_config(self, key, value):
         """
@@ -72,7 +73,8 @@ class Weechat(object):
     def set_storage(self, storage):
         """
         设置全局的缓存存储器
-        存储器主要用来存储会话信息, 以及共享 access_token 等
+        此存储器主要用来存储会话信息, 以及共享 access_token 等
+        还可自用于key->value存储器
         """
 
         self.add_config("storage", storage)

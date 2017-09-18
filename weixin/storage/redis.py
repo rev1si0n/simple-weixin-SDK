@@ -56,3 +56,9 @@ class RedisStorage(_Storage_):
         is_expired implemention for redis
         """
         return not self.database.exists(key)
+
+    def get_ttl(self, key):
+        """
+        get_ttl implemention for redis
+        """
+        return self.database.ttl(key)
