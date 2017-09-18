@@ -139,10 +139,17 @@ class ArticleReply(_WeixinReply_):
                 "<Url><![CDATA[{Url}]]></Url>"\
             "</item>"
 
-            return "".join (item.format(**_) for _ in articles)
+            def set_default(article):
+                article.setdefault("Description", "")
+                article.setdefault("PicUrl", "")
+                article.setdefault("Url", "")
+
+                return article
+
+            return "".join (item.format(**set_default(_)) for _ in articles)
 
         super(ArticleReply, self).__init__(from_msg)
-        self['Articles'] = make_item (articles)
+        self['Articles'] = make_item(articles)
         self['Count'] = len (articles)
 
         xmlform = \
