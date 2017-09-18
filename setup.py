@@ -3,7 +3,7 @@ import setuptools
 requirements = [
     'IPy>=0.83',
     'msgpack-python>=0.4.8',
-    #'pycrypto>=2.6.1',
+    'pycrypto>=2.6.1',
     'requests>=2.18.4',
     'xmltodict>=0.11.0',
     'PyMySQL>=0.7.11',
