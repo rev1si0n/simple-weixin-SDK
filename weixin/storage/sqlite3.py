@@ -1,15 +1,15 @@
 # encoding=utf-8
 import sqlite3
 
-from ._base_ import _BaseSqlStorage_
+from .storage import SqlStorageBase
 
 
-class Sqlite3Storage(_BaseSqlStorage_):
+class Sqlite3Storage(SqlStorageBase):
 
     def __init__(self, uri="weixin.sqlite3"):
-        
+
         self.database = sqlite3.connect(uri, check_same_thread=False)
-    
+
         def make_cursor(database):
             class Sqlite3Cursor(sqlite3.Cursor):
                 def __enter__(self):
@@ -22,7 +22,7 @@ class Sqlite3Storage(_BaseSqlStorage_):
                     del exc_info
                     database.commit()
                     self.close()
-            
+
             return Sqlite3Cursor
 
         self.Cursor = make_cursor(self.database)
@@ -52,4 +52,3 @@ class Sqlite3Storage(_BaseSqlStorage_):
         转义sql语句中的参数格式化符号
         """
         return statement
- 

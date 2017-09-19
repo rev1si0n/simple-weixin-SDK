@@ -1,10 +1,10 @@
 # encoding=utf-8
 import redis
 
-from ._base_ import _Storage_
+from .storage import StorageBase
 
 
-class RedisStorage(_Storage_):
+class RedisStorage(StorageBase):
 
     def __init__(self, uri="redis://127.0.0.1/0"):
         """
