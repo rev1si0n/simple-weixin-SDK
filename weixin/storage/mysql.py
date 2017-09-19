@@ -3,18 +3,18 @@
 import pymysql
 import pymysql.cursors
 
-from ._base_ import _BaseSqlStorage_
+from .storage import SqlStorageBase
 from ..utils import parse_rfc1738_args
 
 
-class MySQLStorage(_BaseSqlStorage_):
+class MySQLStorage(SqlStorageBase):
 
     def __init__(self, uri):
         params = parse_rfc1738_args(uri)
         del params['name']
-        
+
         self.database = pymysql.connect(**params)
-        
+
         def make_cursor(database):
             class MysqlCursor(pymysql.cursors.Cursor):
 
@@ -40,10 +40,10 @@ class MySQLStorage(_BaseSqlStorage_):
                         `expired` BIGINT NULL,
                         PRIMARY KEY (`key`)
                 ) DEFAULT CHARACTER SET = utf8mb4;""")
-    
+
     def _translate_blob(self, data):
         """
-        转义blob字段, sqlite3
+        转义blob字段, pymysql直接返回二进制数据
         """
         return data
 
