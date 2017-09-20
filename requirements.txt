@@ -4,3 +4,4 @@ redis>=2.10.5
 requests>=2.18.1
 IPy==0.83
 xmltodict==0.11.0
+PyMySQL>=0.7.11
