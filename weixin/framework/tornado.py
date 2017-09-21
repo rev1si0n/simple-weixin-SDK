@@ -28,7 +28,9 @@ def make_handler(weapp):
     """
     生成一个tornado RequestHandler
     """
-
+    
+    weapp.initialize()
+    
     class WeixinRequestHandler(tornado.web.RequestHandler):
 
         def initialize(self):
