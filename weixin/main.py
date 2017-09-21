@@ -4,6 +4,8 @@ import re
 from .config import Config
 from .crypto import XMLMsgCryptor
 from .request import WeixinRequest
+from .storage import Sqlite3Storage
+
 
 class Weechat(object):
 
@@ -37,20 +39,33 @@ class Weechat(object):
 
     def initialize(self):
         """
-        初始化配置，应该在make_handler中调用
+        初始化配置，此方法必须在make_handler中调用
         """
-        if self.config.enc_aeskey:
-            if not self.config.appid or not self.config.token:
-                raise Exception(
-                    "enc_aeskey: appid or token not set!")
+        appid = self.config.appid
+        token = self.config.token
+        enc_aeskey = self.config.enc_aeskey
 
-            # 初始化 cryptor
+        if not appid or not token:
+            raise Exception("appid or token not set!")
+
+        if enc_aeskey:
+            ##
+            # 设置了消息加解密密钥, 实例化一个消息cryptor
+            ##
             self.add_config("cryptor", XMLMsgCryptor(
-                appid=self.config.appid,
-                token=self.config.token,
-                enc_aeskey=self.config.enc_aeskey
+                    appid=appid,
+                    token=token,
+                    enc_aeskey=enc_aeskey
                 )
             )
+
+        if self.config.storage is None:
+            ##
+            # 未设置存储器, 设置默认sqlite3存储器, 文件以appid命名
+            ##
+            sqlite_file = "weixin.%s.sqlite3" % appid
+            storage = Sqlite3Storage(uri=sqlite_file)
+            self.set_storage(storage)
 
     def add_config(self, key, value):
         """
@@ -217,29 +232,44 @@ class Weechat(object):
             return function
         return __wrapper__
 
-    def text_filter(self, filt):
+    def text_filter(self, kw_filter):
         """
         为文本关键词注册一个处理器,
         需要注意, 此装饰器请勿与self.text同时使用, 因为此装饰器会注册
         一个处理text处理器来进行关键词的路由
         """
 
-        if isinstance(filt, list):
-            # 预编译关键词数组表达式
-            filt = '^\s*(%s)\s*$' % '|'.join(filt)
+        if isinstance(kw_filter, list):
 
-        elif not isinstance(filt, str):
+            # 关键词数组, 编译关键词表达式
+            regex = '^\s*(%s)\s*$' % '|'.join(kw_filter)
+            kw_filter = re.compile(regex)
+
+        elif isinstance(kw_filter, str):
+
+            # 编译自定义的正则表达式
+            kw_filter = re.compile(kw_filter)
+
+        elif not isinstance(kw_filter, re._pattern_type):
+
+            # 既不是关键词数组也不是字符串正则表达式, 也不是编译好的表达式
             raise Exception(
-                "filter must be keyword list or regexpression")
+                "kw_filter type is not list, str or re_pattern.")
 
-        filt = re.compile(filt)
         def __wrapper__(function):
-            # 注册关键词处理器
-            self.text_filter_handlers.append((filt, function))
+            """
+            注册关键词处理函数, 因为需要截获文本消息来匹配关键词, 所以这里会
+            自动生成一个处理text类型消息的处理器, 所以当使用关键词时, 你不可以再使用
+            Weechat.text 类型装饰器。
+            """
 
-            # 注册关键词路由器
+            self.text_filter_handlers.append((kw_filter, function))
+
             @self.text
             def handle_text_message(weixin):
+                ##
+                # 注册自定义的text类型消息处理器, 此处理器用于关键词路由
+                ##
                 content = weixin.message.Content
                 for cpre, h in self.text_filter_handlers:
                     if cpre.match(content):
