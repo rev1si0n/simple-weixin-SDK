@@ -35,20 +35,20 @@ class Weechat(object):
         # 默认无匹配事件key的处理器
         self.key_filter_default = default
 
-    def set_enc_aeskey(self, enc_aeskey=None):
+    def initialize(self):
         """
-        如果微信消息设置了安全模式的话，在这里设置enc_aeskey
-        来提示程序用密钥加解密微信消息
+        初始化配置，应该在make_handler中调用
         """
-        if enc_aeskey is not None:
-            if not self.config.appid and self.config.token:
+        if self.config.enc_aeskey:
+            if not self.config.appid or not self.config.token:
                 raise Exception(
-                    "token and appid must set before!")
+                    "enc_aeskey: appid or token not set!")
 
+            # 初始化 cryptor
             self.add_config("cryptor", XMLMsgCryptor(
                 appid=self.config.appid,
                 token=self.config.token,
-                enc_aeskey=enc_aeskey
+                enc_aeskey=self.config.enc_aeskey
                 )
             )
 
