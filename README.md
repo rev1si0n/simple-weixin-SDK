@@ -1,6 +1,13 @@
 ## ！项目目前处于开发阶段
 
-项目当前大部分功能通过了测试，但是微信api（server_api）部分未完全经过测试，且此模块未完整实现所有接口
+项目当前大部分功能通过了测试，但是微信api（server_api）部分未完全经过测试，且此模块未完整实现所有接口，只支持Python3.4+版本
+
+### 安装
+``` bash
+pip3 install https://github.com/thisforeda/weixin-Python-SDK/archive/master.zip # 安装
+pip3 install -U https：//... # 升级
+```
+
 
 ### 框架流程简述
 
