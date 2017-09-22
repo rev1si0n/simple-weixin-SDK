@@ -26,7 +26,7 @@ pip3 install -U https：//... # 升级
 # application config.py
 
 from weixin.main import Weechat
-from weixin.server_api import Client
+from weixin.client_api import Client
 from weixin.storage import Sqlite3Storage
 
 
@@ -40,9 +40,7 @@ app.set_storage(Sqlite3Storage())
 app.add_config("token", WEIXIN_TOKEN)
 app.add_config("appid", WEIXIN_APPID)
 app.add_config("appsec", WEIXIN_APPSEC)
-
-# enc_aeskey 必须在前三项设置完毕后才可设置，如果不为None则会使用该密钥对消息加解密
-app.set_enc_aeskey(WEIXIN_ENCAESKEY)
+app.add_config("enc_aeskey", WEIXIN_ENCAESKEY)
 
 # api client
 app.add_config("client", Client(app.config))
