@@ -218,15 +218,15 @@ class Weechat(object):
 
             # 注册key路由器
             @self.click_event
-            def handle_click_event(weixin):
+            def handle_click_event(request):
                 # 获取click的eventkey
-                key = weixin.message.EventKey
+                key = request.message.EventKey
                 handler = self.key_filter_handlers.get(
                     key,
                     self.key_filter_default
                 )
 
-                result = handler(weixin)
+                result = handler(request)
                 return result
 
             return function
@@ -266,11 +266,11 @@ class Weechat(object):
             self.text_filter_handlers.append((kw_filter, function))
 
             @self.text
-            def handle_text_message(weixin):
+            def handle_text_message(request):
                 ##
                 # 注册自定义的text类型消息处理器, 此处理器用于关键词路由
                 ##
-                content = weixin.message.Content
+                content = request.message.Content
                 for cpre, h in self.text_filter_handlers:
                     if cpre.match(content):
                         handler = h
@@ -279,7 +279,7 @@ class Weechat(object):
                     # 无匹配关键词, 调用默认处理器
                     handler = self.text_filter_default
 
-                result = handler(weixin)
+                result = handler(request)
                 return result
 
             return function
