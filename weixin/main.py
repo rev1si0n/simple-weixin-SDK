@@ -232,6 +232,13 @@ class Weechat(object):
             return function
         return __wrapper__
 
+    def as_click_event_filter_default(self, function):
+        """
+        设置默认的event key处理器（无匹配event key时）
+        """
+        self.key_filter_default = function
+        return function
+    
     def text_filter(self, kw_filter):
         """
         为文本关键词注册一个处理器,
@@ -285,6 +292,13 @@ class Weechat(object):
             return function
         return __wrapper__
 
+    def as_text_filter_default(self, function):
+        """
+        设置默认的关键词处理器（无匹配关键词时）
+        """
+        self.text_filter_default = function
+        return function
+    
     def on_finish(self, function):
         """
         每次请求结束后调用（注意只是消息渲染完成, 并不是消息已发送）, 不可做耗时工作
