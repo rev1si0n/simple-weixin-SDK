@@ -46,8 +46,8 @@ app.add_config("enc_aeskey", WEIXIN_ENCAESKEY)
 app.add_config("client", Client(app.config))
 
 # 其他配置
-dino.add_config("database", MYSQL_CONNECTION)
-dino.add_config("app_base_url", "http://example.com")
+app.add_config("database", MYSQL_CONNECTION)
+app.add_config("app_base_url", "http://example.com")
 ```
 > 应用实现
 

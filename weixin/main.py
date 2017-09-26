@@ -9,9 +9,9 @@ from .storage import Sqlite3Storage
 
 class Weechat(object):
 
-    def __init__(self, token=None, appid=None, appsec=None):
+    def __init__(self, token=None, appid=None, appsec=None, enc_aeskey=None):
         """
-        如果设置了enc_aeskey那么回复/接收消息都会调用解密过程
+        最主要的类, 保存应用的各种配置信息以及路由信息, 且负责各种类型消息的路由
         """
         self.config = Config()
 
@@ -19,7 +19,8 @@ class Weechat(object):
         self.add_config("token", token)
         self.add_config("appid", appid)
         self.add_config("appsec", appsec)
-
+        self.add_config("enc_aeskey", enc_aeskey)
+        
         default = lambda req: None
 
         self.handlers = dict()
@@ -75,7 +76,9 @@ class Weechat(object):
         如数据库连接的比较麻烦的方法
 
         !! 重复添加相同名称的属性会导致覆盖
-
+        >>> app.add_config('sqlconn', DB_CONNECTION)
+        >>> ...
+        >>> 
         >>> @app.text_filter(["签到", ])
         >>> def sign(request):
         >>>     database = request.config.sqlconn
