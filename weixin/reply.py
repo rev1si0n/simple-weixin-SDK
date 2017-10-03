@@ -16,7 +16,7 @@ class _WeixinReply_ (dict):
         self['CreateTime'] = int(get_timestamp())
 
 
-class TextReply (_WeixinReply_):
+class TextReply(_WeixinReply_):
 
     def __init__(self, from_msg, content):
 
