@@ -61,13 +61,16 @@ class Client(object):
         file: 可以是http/s协议的网络文件或者本地文件路径
         """
         if re.match("^https?://", file):
-            # 下载图片, 稍微伪装一下UA
-            hd = {"User-Agent": "Mozilla/5.0"}
-            resp = requests.get(file, headers=hd)
-
+            #
+            # 文件是url, 下载图片, 稍微伪装一下UA
+            #
+            resp = requests.get(file, headers={"User-Agent": "Mozilla/5.0"})
             content = resp.content
 
         else:
+            #
+            # 从本地文件读取
+            #
             content = open(file, 'rb').read()
 
         return content
@@ -95,12 +98,7 @@ class Client(object):
 
         return "video"
 
-    def make_request(self, path, method=None,
-                     params={},
-                     data=None,
-                     with_token=False,
-                     raw_response=False, **kwargs
-                     ):
+    def make_request(self, path, method=None, params={}, data=None, with_token=False, raw_response=False, **kwargs):
         """
         所有对微信服务器的请求都会经过这里
         path: 请求路径
@@ -125,25 +123,27 @@ class Client(object):
             data = dumps(data, ensure_ascii=False)
             data = binarify(data)
 
-        resp = requests.request(url=self.get_api_base() + path,
-                    method=method,
-                    params=params,
-                    data=data,
-                    **kwargs
-                    )
+        resp = requests.request(
+            url=self.get_api_base() + path,
+            method=method,
+            params=params,
+            data=data,
+            **kwargs
+            )
 
         if raw_response:
             return resp
 
         result = loads(resp.content.decode("utf-8"))
+        #
         # 对返回数据进行简单检查, 是否请求失败
+        #
         code = result.get("errcode", 0)
-        if code is not 0:
-
+        if code != 0:
+            #
             # 微信api返回了错误码, 触发异常
-            param = (code, result.get("errmsg"))
             raise ClientError(
-                "api returned error, code=%s, msg=%s." % param)
+                "api returned error, code=%s, msg=%s." % (code, result.get("errmsg")))
 
         return result
 

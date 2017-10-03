@@ -20,7 +20,7 @@ class Weechat(object):
         self.add_config("appid", appid)
         self.add_config("appsec", appsec)
         self.add_config("enc_aeskey", enc_aeskey)
-        
+
         default = lambda req: None
 
         self.handlers = dict()
@@ -78,7 +78,7 @@ class Weechat(object):
         !! 重复添加相同名称的属性会导致覆盖
         >>> app.add_config('sqlconn', DB_CONNECTION)
         >>> ...
-        >>> 
+        >>>
         >>> @app.text_filter(["签到", ])
         >>> def sign(request):
         >>>     database = request.config.sqlconn
@@ -241,7 +241,7 @@ class Weechat(object):
         """
         self.key_filter_default = function
         return function
-    
+
     def text_filter(self, kw_filter):
         """
         为文本关键词注册一个处理器,
@@ -301,7 +301,7 @@ class Weechat(object):
         """
         self.text_filter_default = function
         return function
-    
+
     def on_finish(self, function):
         """
         每次请求结束后调用（注意只是消息渲染完成, 并不是消息已发送）, 不可做耗时工作
