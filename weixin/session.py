@@ -52,7 +52,6 @@ class Session(_Session_):
         session = self.storage.get(self.session_id()) or {}
         self.dict.update(session)
 
-
     def session_id(self):
         # self._openid 必须要在先前被设置
         return "session:%s" % self.openid
