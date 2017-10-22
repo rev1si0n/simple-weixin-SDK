@@ -33,11 +33,6 @@ class Weechat(object):
         # 默认关键字无匹配处理器
         self.text_filter_default = default
 
-        # click事件处理器数组
-        self.key_filter_handlers = dict()
-        # 默认无匹配事件key的处理器
-        self.key_filter_default = default
-
     def initialize(self):
         """
         初始化配置，此方法必须在make_handler中调用
@@ -97,27 +92,31 @@ class Weechat(object):
 
         self.add_config("storage", storage)
 
-    def add_base_handler(self, type_, function):
-        """
-        设置一个对应MsgType的处理器
-        """
-        type_ = self.uniform(type_)
-        self.handlers[type_] = function
-        return
-
-    def get_base_handler(self, type_):
-        """
-        根据消息类型返回对应的处理器
-        """
-        type_ = self.uniform(type_)
-        handler = self.handlers.get(type_, self.default)
-        return handler
-
     def uniform(self, key):
         """
         将key转换为大写
         """
         return key.upper()
+
+    def add_base_handler(self, key, function):
+        """
+        设置一个对应MsgType的处理器
+        """
+        key = self.uniform(key)
+        self.handlers[key] = function
+        return
+
+    def get_base_handler(self, key_list):
+        """
+        根据消息key列表找出对应的处理器，如果没找到则返回的是默认处理器
+        """
+        for k in key_list:
+            k = self.uniform(k)
+            h = self.handlers.get(k, None)
+            if callable(h):
+                return h
+
+        return self.default
 
     def text(self, function):
         """
@@ -171,7 +170,6 @@ class Weechat(object):
     def subscribe_event(self, function):
         """
         装饰 MsgType=event, Event=subscribe 的处理器
-        用户刚刚关注时调用
         """
         self.add_base_handler("event_subscribe", function)
         return function
@@ -179,7 +177,6 @@ class Weechat(object):
     def unsubscribe_event(self, function):
         """
         装饰 MsgType=event, Event=unsubscribe 的处理器
-        用户取消关注时调用
         """
         self.add_base_handler("event_unsubscribe", function)
         return function
@@ -187,60 +184,76 @@ class Weechat(object):
     def location_event(self, function):
         """
         装饰 MsgType=event, Event=location 的处理器
-        上报地理位置事件
         """
         self.add_base_handler("event_location", function)
-        return function
-
-    def click_event(self, function):
-        """
-        装饰 MsgType=event, Event=click 的处理器
-        自定义菜单click事件
-        """
-        self.add_base_handler("event_click", function)
         return function
 
     def view_event(self, function):
         """
         装饰 MsgType=event, Event=view 的处理器
-        点击菜单跳转链接时的事件推送
         """
         self.add_base_handler("event_view", function)
+        return function
+
+    def click_event(self, function):
+        """
+        装饰 MsgType=event, Event=click 的处理器
+        """
+        self.add_base_handler("event_click", function)
         return function
 
     def click_event_filter(self, key):
         """
         为click事件的一个eventkey绑定一个处理器
-        需要注意, 此装饰器请勿与self.click_event同时使用, 因为此装饰器会注册
-        一个处理click事件的eventkey路由器
         """
-
-        def __wrapper__(function):
-            # 注册key处理器
-            self.key_filter_handlers[key] = function
-
-            # 注册key路由器
-            @self.click_event
-            def handle_click_event(request):
-                # 获取click的eventkey
-                key = request.message.EventKey
-                handler = self.key_filter_handlers.get(
-                    key,
-                    self.key_filter_default
-                )
-
-                result = handler(request)
-                return result
-
+        def register(function):
+            # 注册点击事件的处理器
+            k = "event_click_%s" % key
+            self.add_base_handler(k, function)
             return function
-        return __wrapper__
 
-    def as_click_event_filter_default(self, function):
+        return register
+
+    def scan_event_filter(self, scene):
         """
-        设置默认的event key处理器（无匹配event key时）
+        为scan事件的一个场景绑定一个处理器
         """
-        self.key_filter_default = function
-        return function
+        def register(function):
+            # 注册点击事件的处理器
+            k = "event_scan_%s" % scene
+            self.add_base_handler(k, function)
+            return function
+
+        return register
+
+    def subscribe_event_filter(self, scene):
+        """
+        为subscribe事件的一个场景绑定一个处理器
+        """
+        def register(function):
+            # 注册点击事件的处理器
+            k = "event_subscribe_%s" % scene
+            self.add_base_handler(k, function)
+            return function
+
+        return register
+
+    def _compile_text_filter(self, filter_):
+        if isinstance(filter_, list):
+            # 关键词数组, 编译关键词表达式
+            regex = '^\s*(%s)\s*$' % '|'.join(filter_)
+            return re.compile(regex)
+
+        elif isinstance(filter_, str):
+            # 编译自定义的正则表达式
+            return re.compile(filter_)
+
+        elif isinstance(filter_, re._pattern_type):
+            # 已编译的正则表达式，直接返回
+            return filter_
+
+        raise Exception(
+            "filter is not list, str or re_pattern.")
 
     def text_filter(self, kw_filter):
         """
@@ -248,32 +261,15 @@ class Weechat(object):
         需要注意, 此装饰器请勿与self.text同时使用, 因为此装饰器会注册
         一个处理text处理器来进行关键词的路由
         """
+        filter_ = self._compile_text_filter(kw_filter)
 
-        if isinstance(kw_filter, list):
-
-            # 关键词数组, 编译关键词表达式
-            regex = '^\s*(%s)\s*$' % '|'.join(kw_filter)
-            kw_filter = re.compile(regex)
-
-        elif isinstance(kw_filter, str):
-
-            # 编译自定义的正则表达式
-            kw_filter = re.compile(kw_filter)
-
-        elif not isinstance(kw_filter, re._pattern_type):
-
-            # 既不是关键词数组也不是字符串正则表达式, 也不是编译好的表达式
-            raise Exception(
-                "kw_filter type is not list, str or re_pattern.")
-
-        def __wrapper__(function):
+        def register(function):
             """
             注册关键词处理函数, 因为需要截获文本消息来匹配关键词, 所以这里会
             自动生成一个处理text类型消息的处理器, 所以当使用关键词时, 你不可以再使用
             Weechat.text 类型装饰器。
             """
-
-            self.text_filter_handlers.append((kw_filter, function))
+            self.text_filter_handlers.append((filter_, function))
 
             @self.text
             def handle_text_message(request):
@@ -283,17 +279,16 @@ class Weechat(object):
                 content = request.message.Content
                 for cpre, h in self.text_filter_handlers:
                     if cpre.match(content):
-                        handler = h
                         break
                 else:
                     # 无匹配关键词, 调用默认处理器
-                    handler = self.text_filter_default
+                    h = self.text_filter_default
 
-                result = handler(request)
-                return result
-
+                return h(request)
+            # register return
             return function
-        return __wrapper__
+        # decorator return
+        return register
 
     def as_text_filter_default(self, function):
         """
@@ -310,15 +305,27 @@ class Weechat(object):
         self.add_base_handler("_on_finish_", function)
         return function
 
-    def _get_msg_type_key(self, message):
+    def _get_msg_handler_key(self, message):
         """
         依据消息中的MsgType信息合成获取对应handler的key
         """
-        key = self.uniform(message.MsgType)
-        if key and key == self.uniform("EVENT"):
-            key = "EVENT_%s" % message.Event
+        mtype = self.uniform(message.MsgType)
+        if mtype and mtype == self.uniform("EVENT"):
+            ev = self.uniform(message.Event)
 
-        return key
+            main_h_key = "EVENT_%s" % ev
+            # 这几个事件都是有一个固定key的, 所以直接拼接成
+            # 给主路由获取处理器用的key
+
+            if ev in ("CLICK", "SCAN", "SUBSCRIBE",):
+                ev_key = self.uniform(message.EventKey)
+                sub_h_key = "EVENT_%s_%s" % (ev, ev_key)
+
+                return sub_h_key, main_h_key
+            else:
+                return main_h_key,
+
+        return mtype,
 
     def reply(self, xmlbody):
         """
@@ -326,7 +333,7 @@ class Weechat(object):
         """
         req = WeixinRequest(self.config, xmlbody)
 
-        key = self._get_msg_type_key(req.message)
+        key = self._get_msg_handler_key(req.message)
         # 检查key是否存在, 不存在可能是因为
         # 发送的是加密消息, 而enc_aeskey未设置导致获取属性时返回None
         if not key:
