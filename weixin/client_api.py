@@ -75,6 +75,12 @@ class Client(object):
 
         return content
 
+    def _format_json(self, data):
+        """
+        将JSON（字典）转换成格式化的字符串
+        """
+        return dumps(data, indent=4, ensure_ascii=False)
+
     def get_media_type_by_file_suffix(self, filename):
         """
         通过文件/网络文件的后缀名判断媒体类型
@@ -209,7 +215,7 @@ class Client(object):
             with_token=True
             )
 
-    def get_menu(self):
+    def get_menu(self, string=False):
         """
         获取当前的菜单设置
         将会直接返回响应内容的menu结点
@@ -220,7 +226,11 @@ class Client(object):
             with_token=True
             )
 
-        return result["menu"]
+        menu = result["menu"]
+        if not string:
+            return menu
+
+        return self._format_json(menu)
 
     def delete_menu(self):
         """
