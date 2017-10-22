@@ -198,6 +198,9 @@ class Weechat(object):
     def click_event(self, function):
         """
         装饰 MsgType=event, Event=click 的处理器
+        注意：
+        当此装饰器与click_event_filter一起使用时，click_event_filter
+        的优先级高，所以仅当无匹配click event key时被装饰的方法才会被调用
         """
         self.add_base_handler("event_click", function)
         return function
@@ -208,8 +211,7 @@ class Weechat(object):
         """
         def register(function):
             # 注册点击事件的处理器
-            k = "event_click_%s" % key
-            self.add_base_handler(k, function)
+            self.add_base_handler("event_click_%s" % key, function)
             return function
 
         return register
@@ -219,9 +221,8 @@ class Weechat(object):
         为scan事件的一个场景绑定一个处理器
         """
         def register(function):
-            # 注册点击事件的处理器
-            k = "event_scan_%s" % scene
-            self.add_base_handler(k, function)
+            # 注册扫描事件的处理器
+            self.add_base_handler("event_scan_%s" % scene, function)
             return function
 
         return register
@@ -231,9 +232,8 @@ class Weechat(object):
         为subscribe事件的一个场景绑定一个处理器
         """
         def register(function):
-            # 注册点击事件的处理器
-            k = "event_subscribe_%s" % scene
-            self.add_base_handler(k, function)
+            # 注册订阅事件的处理器
+            self.add_base_handler("event_subscribe_%s" % scene, function)
             return function
 
         return register
