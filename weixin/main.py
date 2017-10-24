@@ -333,15 +333,15 @@ class Weechat(object):
         """
         req = WeixinRequest(self.config, xmlbody)
 
-        key = self._get_msg_handler_key(req.message)
+        keys = self._get_msg_handler_key(req.message)
         # 检查key是否存在, 不存在可能是因为
         # 发送的是加密消息, 而enc_aeskey未设置导致获取属性时返回None
-        if not key:
+        if not keys:
             return
 
         # 获取处理器
-        processer = self.get_base_handler(key)
-        on_finish = self.get_base_handler("_on_finish_")
+        processer = self.get_base_handler(keys)
+        on_finish = self.get_base_handler(["_on_finish_", ])
         result = processer(req)
         on_finish(req)
 
