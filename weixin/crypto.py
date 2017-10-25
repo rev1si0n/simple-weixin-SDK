@@ -40,7 +40,7 @@ class AESCipher:
     基础部分来自 http://stackoverflow.com/questions/12524994
     稍微做了一下兼容性修改
     """
-    
+
     def __init__(self, key):
         self.BS = 32
 
@@ -98,7 +98,7 @@ class XMLMsgCryptor(object):
                 解密消息中的appid不等于提供的appid, 触发异常
                 """
                 raise CryptorError(
-                    "message appid %s not equ %s" % (aid, self.appid))
+                    "message appid %s not eq %s" % (aid, stringify(self.appid)))
 
         # 返回xml
         content = stringify(text[20: lenth + 20])
@@ -108,7 +108,7 @@ class XMLMsgCryptor(object):
         """
         加密消息, xml 为已经渲染好的原始xml
         """
-        
+
         # 先将xml转换为字节，否则当内容含有多字节字符时会导致len计数错误
         xml = binarify(xml)
 
