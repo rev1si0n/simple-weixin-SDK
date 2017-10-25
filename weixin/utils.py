@@ -20,7 +20,7 @@ def make_link(title, link):
     return h_tag
 
 
-def binarify(s: 'str, int, float, bytes', encoding="utf-8"):
+def binarify(s, encoding="utf-8"):
     '''
     将字符串，数字转化为bytes对象，同时也接受
     bytes对象，但是直接返回
@@ -44,8 +44,7 @@ def stringify(s, encoding="utf-8"):
         return s
 
     if isinstance(s, (int, float)):
-        s = str(s)
-        return s
+        return str(s)
 
     content = s.decode(encoding)
     return content
@@ -88,7 +87,7 @@ def is_valid_request(token, nonce, timestamp, signature):
     即查询字符串包含 nonce,timestamp,signature 且通过校验
     """
     sig = get_signature(token, nonce, timestamp)
-    
+
     return sig == signature
 
 
@@ -116,7 +115,7 @@ def parse_rfc1738_args(url):
     m = pattern.match(url)
     if m is None:
         return
-    
+
     components = m.groupdict()
     components['host'] = components['ipv4host'] \
                          or components['ipv6host']
@@ -126,12 +125,16 @@ def parse_rfc1738_args(url):
     return components
 
 
+class AttributeDictError(Exception):
+    pass
+
+
 class AttributeDict(dict):
     """
     增加属性访问的字典, 仅支持单层字典的属性访问
     """
-    
-    def __getattribute__(self, key):
+
+    def __getattr__(self, key):
         """
         提供属性访问方法
         如果属性在字典中不存在, 返回 None
@@ -140,13 +143,8 @@ class AttributeDict(dict):
             # 尝试读取字典key
             return super(AttributeDict, self).__getitem__(key)
         except KeyError:
-            try:
-                # 没有此key, 看看是否有该方法
-                return super(AttributeDict, self).__getattribute__(key)
+            return
 
-            except AttributeError:
-                pass
-    
     def __getitem__(self, key):
         """
         普通字典方式访问
@@ -162,16 +160,22 @@ class AttributeDict(dict):
         设置一个属性
         多次设置相同属性会覆盖, 且无提示
         """
+        if key.startswith("__") and key.endswith("__"):
+            raise AttributeDictError(
+                "name type __[name]__ is reserved."
+            )
 
         super(AttributeDict, self).__setitem__(key, value)
+
+    __setattr__ = set
 
     def setnx(self, key, value):
         """
         仅当属性不存在时设置属性
         setnx = set when not exist
         """
-        
-        if not super(AttributeDict, self).get(key):
+
+        if not self.__getitem__(key):
             self.set(key, value)
 
     def remove(self, key):
@@ -180,8 +184,7 @@ class AttributeDict(dict):
         不论是否存在key, 无返回值
         """
         try:
-            super(AttributeDict, self).pop(key)
-
+            self.__delitem__(key)
         except KeyError:
             pass
 
@@ -191,7 +194,7 @@ class _NULL_(AttributeDict):
     替代 None 对象
     这样即使访问到了未提供的属性或是key也不会抛出 AttributeError/ KeyError
     """
-    
+
     def __bool__(self):
         return not 1
 
