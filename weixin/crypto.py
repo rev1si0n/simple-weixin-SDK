@@ -41,29 +41,40 @@ class AESCipher:
     稍微做了一下兼容性修改
     """
 
-    def __init__(self, key):
+    def __init__(self, key=None, iv=None):
         self.BS = 32
 
-        def pad(s):
-            lenth = (self.BS - len(s) % self.BS)
-            chr_ = chr(lenth)
-            if isinstance(s, bytes):
-                chr_ = binarify(chr_)
+        def pad(data):
+            lenth = (self.BS - len(data) % self.BS)
+            ch = chr(lenth)
+            if isinstance(data, bytes):
+                ch = binarify(ch)
 
-            return s + (lenth * chr_)
+            return data + (lenth * ch)
 
+        self.iv = iv
         self.key = key
         self.pad = pad
         self.unpad = lambda s: s[:-ord(s[len(s) - 1:])]
 
-    def encrypt(self, raw):
+    def encrypt(self, raw, key=None, iv=None):
+        """
+        raw: 需要编码的数据
+        """
         raw = self.pad(raw)
-        cipher = AES.new(self.key, AES.MODE_CBC, self.key[:16])
+        key, iv = key or self.key, iv or self.iv
+
+        cipher = AES.new(key, AES.MODE_CBC, iv or key[:16])
         return base64_encode(cipher.encrypt(raw))
 
-    def decrypt(self, enc):
+    def decrypt(self, enc, key=None, iv=None):
+        """
+        enc: base64编码的数据
+        """
         enc = base64_decode(enc)
-        cipher = AES.new(self.key, AES.MODE_CBC, self.key[:16])
+        key, iv = key or self.key, iv or self.iv
+
+        cipher = AES.new(key, AES.MODE_CBC, iv or key[:16])
         return self.unpad(cipher.decrypt(enc))
 
 
