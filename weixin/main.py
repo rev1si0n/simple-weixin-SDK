@@ -216,6 +216,13 @@ class Weechat(object):
 
         return register
 
+    def scan_event(self, function):
+        """
+        扫描带参数二维码事件
+        """
+        self.add_base_handler("event_scan", function)
+        return function
+
     def scan_event_filter(self, scene):
         """
         为scan事件的一个场景绑定一个处理器
@@ -223,17 +230,6 @@ class Weechat(object):
         def register(function):
             # 注册扫描事件的处理器
             self.add_base_handler("event_scan_%s" % scene, function)
-            return function
-
-        return register
-
-    def subscribe_event_filter(self, scene):
-        """
-        为subscribe事件的一个场景绑定一个处理器
-        """
-        def register(function):
-            # 注册订阅事件的处理器
-            self.add_base_handler("event_subscribe_%s" % scene, function)
             return function
 
         return register
@@ -317,7 +313,7 @@ class Weechat(object):
             # 这几个事件都是有一个固定key的, 所以直接拼接成
             # 给主路由获取处理器用的key
 
-            if ev in ("CLICK", "SCAN", "SUBSCRIBE",):
+            if ev in ("CLICK", "SCAN",) and message.EventKey:
                 ev_key = self.uniform(message.EventKey)
                 sub_h_key = "EVENT_%s_%s" % (ev, ev_key)
 
