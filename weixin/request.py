@@ -45,20 +45,24 @@ class WeixinRequest(object):
             if self._raw_xml_:
                 try:
                     self._weixin_msg_ = WeixinMsg(self._raw_xml_)
-                    if self.config.cryptor:
-                        encrypted_msg = self._weixin_msg_.Encrypt
+                    encrypted_msg = self._weixin_msg_.Encrypt
+                    cryptor = self.config.cryptor
 
-                        if not encrypted_msg:
-                            # 没有消息或者消息未加密
-                            raise Exception(
-                                "message not encrypted.")
-
+                    if encrypted_msg and cryptor:
                         # 解密被加密的消息Encrypt
-                        cryptor = self.config.cryptor
                         body = cryptor.decrypt(encrypted_msg)
 
                         del self._weixin_msg_
                         self._weixin_msg_ = WeixinMsg(body)
+
+                    elif encrypted_msg or cryptor:
+                        raise Exception(
+                            "message {0}encrypted but enc_aeskey is {1}set.".format(
+                            "" if encrypted_msg else "not ",
+                            "" if cryptor else "not ",
+                            )
+                        )
+
                 except (ExpatError, KeyError):
                     # 非正常xml文本或者xml格式不符合要求
                     raise
