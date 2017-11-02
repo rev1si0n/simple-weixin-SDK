@@ -71,6 +71,18 @@ class Session(_Session_):
         self.dict = {}
         self.storage.delete(self.session_id())
 
+    def __call__(self, key, value=None):
+        """
+        >>> # 获取会话user的值
+        >>> u = req.session("user")
+        >>> # 设置会话user的值
+        >>> req.session("user", "Zhang")
+        """
+        if value is not None:
+            self.__setitem__(key, value)
+
+        return self.__getitem__(key)
+
     def __setitem__(self, key, value):
         ''' session['hello'] = 'yes'
         '''
