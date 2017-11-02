@@ -2,6 +2,19 @@
 from .utils import get_timestamp
 
 
+def CDATA_escape(escape_s):
+    """
+    转义xml的CDATA中的]]>
+    偶然在一次测试下发现当CDATA中包含</xml>结束标签时也会导致微信非正常解析
+    即如果CDATA内容为 <![CDATA[你😫</xml>(⊙﹏⊙)]]>，用户收到的内容却为
+    你😫</root>, 且此结束标签只在全小写状态下会导致这种情况。
+    """
+    if escape_s is not None:
+        escape_s = escape_s.replace("]]>", ']]&gt;')
+        escape_s = escape_s.replace("</xml>", '</xml&gt;')
+        return escape_s
+
+
 def _make_node (k, v):
     if v : return "<{node}><![CDATA[{value}]]></{node}>".format(node=k, value=v)
     # 空字符串
@@ -21,7 +34,7 @@ class TextReply(_WeixinReply_):
     def __init__(self, from_msg, content):
 
         super(TextReply, self).__init__ (from_msg)
-        self['Content'] = content
+        self['Content'] = CDATA_escape(content)
 
         xmlform = \
         "<xml>"\
@@ -80,6 +93,9 @@ class VideoReply(_WeixinReply_):
 
     def __init__(self, from_msg, videoMediaId, title=None, description=None):
 
+        title = CDATA_escape(title)
+        description = CDATA_escape(description)
+
         super(VideoReply, self).__init__ (from_msg)
         self['MediaId'] = mediaId
         self['TitleNode'] = _make_node ("Title", title)
@@ -103,6 +119,9 @@ class VideoReply(_WeixinReply_):
 class MusicReply(_WeixinReply_):
 
     def __init__(self, from_msg, thumbMediaId, musicUrl=None, hqMusicUrl=None,  title=None, description=None):
+
+        title = CDATA_escape(title)
+        description = CDATA_escape(description)
 
         super(MusicReply, self).__init__(from_msg)
         self['ThumbMediaId'] = thumbMediaId
@@ -144,6 +163,12 @@ class ArticleReply(_WeixinReply_):
                 article.setdefault("PicUrl", "")
                 article.setdefault("Url", "")
 
+                a_title = article['Title']
+                a_desc = article['Description']
+
+                article['Title'] = CDATA_escape(a_title)
+                article['Description'] = CDATA_escape(a_desc)
+
                 return article
 
             return "".join (item.format(**set_default(_)) for _ in articles)
@@ -182,7 +207,6 @@ class EncryptReply(dict):
         "</xml>"
 
         self.xml = xmlform.format(**self)
-
 
 
 class CustomMsgReply(object):
