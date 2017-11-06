@@ -20,34 +20,29 @@ def make_link(title, link):
     return h_tag
 
 
-def binarify(s, encoding="utf-8"):
-    '''
-    将字符串，数字转化为bytes对象，同时也接受
-    bytes对象，但是直接返回
-    '''
-    if isinstance(s, bytes):
-        return s
+def to_str(bytes_or_str):
+    if isinstance(bytes_or_str, bytes):
+        # default encoding 'utf-8'
+        value = bytes_or_str.decode()
+    elif isinstance(bytes_or_str, (int, float)):
+        # translate int, float to string
+        value = repr(bytes_or_str)
+    else:
+        value = bytes_or_str
+    return value
 
-    if isinstance(s, (int, float)):
-        s = str(s)
-
-    content = s.encode(encoding)
-    return content
+stringify = to_str
 
 
-def stringify(s, encoding="utf-8"):
-    '''
-    将字节对象，数字转换为字符串str类型，同时也接收本来就是字符串
-    str的类型，但是直接返回
-    '''
-    if isinstance(s, str):
-        return s
+def to_bytes(bytes_or_str):
+    if isinstance(bytes_or_str, (str, int, float)):
+        # default encoding 'utf-8'
+        value = to_str(bytes_or_str).encode()
+    else:
+        value = bytes_or_str
+    return value
 
-    if isinstance(s, (int, float)):
-        return str(s)
-
-    content = s.decode(encoding)
-    return content
+binarify = to_bytes
 
 
 def mix_seq(seq, type_=bytes):
@@ -75,7 +70,7 @@ def get_signature(*args):
     '''
     获取给定不定量参数的sha1 signature，参数可以同时是str/bytes
     '''
-    args = sorted(map(binarify, args))
+    args = sorted(map(to_bytes, args))
     sha1 = hashlib.sha1(mix_seq(args, bytes))
 
     return sha1.hexdigest()
@@ -201,7 +196,10 @@ class _NULL_(AttributeDict):
 
 __all__ = ['get_timestamp',
            'make_link',
+           'to_bytes',
            'binarify',
+           'to_str',
+           'stringify',
            'mix_seq',
            'get_nonce',
            'get_signature',

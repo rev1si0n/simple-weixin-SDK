@@ -5,18 +5,17 @@ from Crypto.Cipher import AES
 from .utils import (
     get_timestamp,
     mix_seq,
-    binarify,
-    stringify,
+    to_bytes,
+    to_str,
     get_signature,
     get_nonce)
 
 
-def base64_encode(s, encoding="utf-8"):
+def base64_encode(s):
     """
     简写的base64编码
     """
-    s = binarify(s, encoding=encoding)
-    data = base64.b64encode(s)
+    data = base64.b64encode(to_bytes(s))
     return data
 
 
@@ -48,7 +47,7 @@ class AESCipher:
             lenth = (self.BS - len(data) % self.BS)
             ch = chr(lenth)
             if isinstance(data, bytes):
-                ch = binarify(ch)
+                ch = to_bytes(ch)
 
             return data + (lenth * ch)
 
@@ -109,10 +108,10 @@ class XMLMsgCryptor(object):
                 解密消息中的appid不等于提供的appid, 触发异常
                 """
                 raise CryptorError(
-                    "message appid %s not eq %s" % (aid, stringify(self.appid)))
+                    "message appid %s not eq %s" % (aid, to_str(self.appid)))
 
         # 返回xml
-        content = stringify(text[20: lenth + 20])
+        content = to_str(text[20: lenth + 20])
         return content
 
     def encrypt(self, xml):
@@ -121,13 +120,13 @@ class XMLMsgCryptor(object):
         """
 
         # 先将xml转换为字节，否则当内容含有多字节字符时会导致len计数错误
-        xml = binarify(xml)
+        xml = to_bytes(xml)
 
         blenth = int.to_bytes(len(xml), 4, 'big')
 
-        seq = mix_seq(map(binarify, [get_nonce(16), blenth, xml, self.appid]), bytes)
+        seq = mix_seq(map(to_bytes, [get_nonce(16), blenth, xml, self.appid]), bytes)
         enctext = self.cryptor.encrypt(seq)
-        enctext = stringify(enctext)
+        enctext = to_str(enctext)
 
         # 加密后的内容, bytes Type
         nonce = get_nonce(5)

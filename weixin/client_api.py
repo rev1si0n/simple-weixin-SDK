@@ -4,7 +4,7 @@ import IPy
 import requests
 from json import dumps, loads
 
-from .utils import binarify
+from .utils import to_bytes
 
 
 class ClientError(Exception):
@@ -127,7 +127,7 @@ class Client(object):
 
             # data必须是字典或者列表类型
             data = dumps(data, ensure_ascii=False)
-            data = binarify(data)
+            data = to_bytes(data)
 
         resp = requests.request(
             url=self.get_api_base() + path,
