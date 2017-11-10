@@ -4,11 +4,20 @@ from Crypto.Cipher import AES
 
 from .utils import (
     get_timestamp,
-    mix_seq,
+    join_sequence,
     to_bytes,
     to_str,
     get_signature,
     get_nonce)
+
+
+__all__ = [
+    "AESCipher",
+    "XMLMsgCryptor",
+    "CryptorError",
+    "base64_encode",
+    "base64_decode"
+]
 
 
 def base64_encode(s):
@@ -124,7 +133,7 @@ class XMLMsgCryptor(object):
 
         blenth = int.to_bytes(len(xml), 4, 'big')
 
-        seq = mix_seq(map(to_bytes, [get_nonce(16), blenth, xml, self.appid]), bytes)
+        seq = join_sequence(map(to_bytes, [get_nonce(16), blenth, xml, self.appid]))
         enctext = self.cryptor.encrypt(seq)
         enctext = to_str(enctext)
 
@@ -139,10 +148,3 @@ class XMLMsgCryptor(object):
                     nonce=nonce,
                     timestamp=timestamp,
                     signature=sig)
-
-
-__all__ = ["AESCipher",
-           "XMLMsgCryptor",
-           "CryptorError",
-           "base64_encode",
-           "base64_decode"]

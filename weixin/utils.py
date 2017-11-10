@@ -5,6 +5,23 @@ import time as _time
 from random import choice
 
 
+__all__ = [
+    'get_timestamp',
+    'make_link',
+    'to_bytes',
+    'binarify',
+    'to_str',
+    'stringify',
+    'join_sequence',
+    'mix_seq',
+    'get_nonce',
+    'get_signature',
+    'is_valid_request',
+    'AttributeDict',
+    '_NULL_',
+]
+
+
 def get_timestamp():
     '''
     获取当前时间戳
@@ -45,13 +62,15 @@ def to_bytes(bytes_or_str):
 binarify = to_bytes
 
 
-def mix_seq(seq, type_=bytes):
+def join_sequence(seq):
     '''
     "".join(...)的函数式，因为我并不喜欢代码中出现太多的这种格式。
-    所以写此作为代替。接收list与tuple类型的序列，type_代表序列中元素的类型。
+    所以写此作为代替。接收list与tuple类型的字符串/字节序列
     '''
-    joiner = ("", b"")[type_ is bytes]
-    return joiner.join(seq)
+    seq = list(seq)
+    return type(seq[0])().join(seq)
+
+mix_seq = join_sequence
 
 
 def get_nonce(length):
@@ -63,7 +82,7 @@ def get_nonce(length):
             'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
     seq = map(lambda x: choice(table), range(length))
-    return mix_seq(seq, str)
+    return join_sequence(seq)
 
 
 def get_signature(*args):
@@ -71,7 +90,7 @@ def get_signature(*args):
     获取给定不定量参数的sha1 signature，参数可以同时是str/bytes
     '''
     args = sorted(map(to_bytes, args))
-    sha1 = hashlib.sha1(mix_seq(args, bytes))
+    sha1 = hashlib.sha1(join_sequence(args))
 
     return sha1.hexdigest()
 
@@ -120,10 +139,6 @@ def parse_rfc1738_args(url):
     return components
 
 
-class AttributeDictError(Exception):
-    pass
-
-
 class AttributeDict(dict):
     """
     增加属性访问的字典, 仅支持单层字典的属性访问
@@ -138,7 +153,7 @@ class AttributeDict(dict):
             # 尝试读取字典key
             return super(AttributeDict, self).__getitem__(key)
         except KeyError:
-            return
+            pass
 
     def __getitem__(self, key):
         """
@@ -155,11 +170,6 @@ class AttributeDict(dict):
         设置一个属性
         多次设置相同属性会覆盖, 且无提示
         """
-        if key.startswith("__") and key.endswith("__"):
-            raise AttributeDictError(
-                "name type __[name]__ is reserved."
-            )
-
         super(AttributeDict, self).__setitem__(key, value)
 
     __setattr__ = set
@@ -169,7 +179,6 @@ class AttributeDict(dict):
         仅当属性不存在时设置属性
         setnx = set when not exist
         """
-
         if not self.__getitem__(key):
             self.set(key, value)
 
@@ -192,17 +201,3 @@ class _NULL_(AttributeDict):
 
     def __bool__(self):
         return not 1
-
-
-__all__ = ['get_timestamp',
-           'make_link',
-           'to_bytes',
-           'binarify',
-           'to_str',
-           'stringify',
-           'mix_seq',
-           'get_nonce',
-           'get_signature',
-           'is_valid_request',
-           'AttributeDict',
-           '_NULL_']

@@ -7,6 +7,9 @@ from .request import WeixinRequest
 from .storage import Sqlite3Storage
 
 
+__all__ = ['Weechat',]
+
+
 class Weechat(object):
 
     def __init__(self, token=None, appid=None, appsec=None, enc_aeskey=None):
@@ -343,5 +346,3 @@ class Weechat(object):
 
         xml = req.get_response_xml(default=result)
         return xml
-
-__all__ = ['Weechat',]

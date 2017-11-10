@@ -7,6 +7,9 @@ from json import dumps, loads
 from .utils import to_bytes
 
 
+__all__ = ["Client", "ClientError"]
+
+
 class ClientError(Exception):
     pass
 
@@ -367,5 +370,3 @@ class Client(object):
             raw_response=True,
             with_token=True
             )
-
-__all__ = ["Client", "ClientError"]
