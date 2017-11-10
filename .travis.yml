@@ -1,4 +1,7 @@
 language: python
+cache: pip
+os:
+  - linux
 services:
   - redis-server
   - mysql
