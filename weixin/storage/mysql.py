@@ -35,7 +35,7 @@ class MySQLStorage(SqlStorageBase):
         with self.database.cursor(self.Cursor) as cursor:
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS `storage` (
-                        `key` VARCHAR (512) NOT NULL,
+                        `key` VARCHAR (128) NOT NULL,
                         `value` BLOB NULL,
                         `expired` BIGINT NULL,
                         PRIMARY KEY (`key`)
