@@ -133,7 +133,7 @@ class SqlStorageBase(StorageBase):
             cursor.execute(self._escape_sql_args_formatter("""
                 DELETE
                 FROM `storage`
-                WHERE `key`=? LIMIT 1;"""),
+                WHERE `key`=?;"""),
                 (key,))
 
     def purge_expired(self):
