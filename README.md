@@ -1,7 +1,7 @@
 
-[![](https://img.shields.io/travis/LUSG/weixin-SDK/dev.svg?label=Travis%20build)](https://travis-ci.org/LUSG/weixin-SDK)
+[![](https://img.shields.io/travis/LUSG/weixin-SDK/master.svg?label=Travis%20build)](https://travis-ci.org/LUSG/weixin-SDK)
 
-## ！开发版本
+## 开发版本
 
 此项目是从另一个项目中独立出来的一个轮子框架，随着另一个项目的开发而跟进。
 
