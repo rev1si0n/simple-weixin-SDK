@@ -51,10 +51,6 @@ def test_request(config, umsg):
         assert msg.Content == 'hello'
 
     def assert_req_msg(req):
-        if config.cryptor:
-            xml = config.cryptor.decrypt(msg.Encrypt)
-            msg = WeixinMsg(xml)
-
         assert req.message.ToUserName == 'toUser'
         assert req.message.FromUserName == 'fromUser'
         assert req.message.CreateTime == '123456789'
