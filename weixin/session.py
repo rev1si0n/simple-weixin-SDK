@@ -1,6 +1,6 @@
 # encoding=utf-8
 
-class _Session_(object):
+class BaseSession(object):
     '''
     会话基础类
     '''
@@ -36,7 +36,7 @@ class _Session_(object):
         raise NotImplementedError
 
 
-class Session(_Session_):
+class Session(BaseSession):
 
     def __init__(self, req):
         ''' 初始化session信息, 从数据库读取并加载会话

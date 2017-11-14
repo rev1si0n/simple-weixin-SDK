@@ -1,7 +1,7 @@
 # encoding=utf-8
 from xml.parsers.expat import ExpatError
 
-from .utils import _NULL_
+from .utils import AttrNone
 from .session import Session
 from .parse import WeixinMsg
 from .reply import EncryptReply
@@ -41,7 +41,7 @@ class WeixinRequest(object):
         首次访问message属性时解析微信消息。
         """
         if not hasattr(self, '_weixin_msg_'):
-            self._weixin_msg_ = _NULL_()
+            self._weixin_msg_ = AttrNone()
             if self._raw_xml_:
                 try:
                     self._weixin_msg_ = WeixinMsg(self._raw_xml_)
