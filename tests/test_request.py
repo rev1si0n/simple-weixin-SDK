@@ -28,7 +28,7 @@ text_msg_encrypted = """
 </xml>
 """
 
-@pytest.mark.parametrize("config,msg", [
+@pytest.mark.parametrize("config,umsg", [
     (Config(**common_cfg), text_msg),
     (Config(**common_cfg, cryptor=XMLMsgCryptor(
         **common_cfg,
@@ -36,32 +36,36 @@ text_msg_encrypted = """
         )
     ), text_msg_encrypted),
 ])
-def test_request(config, msg):
-    
+def test_request(config, umsg):
+
     def assert_reply(msg):
         if config.cryptor:
             xml = config.cryptor.decrypt(msg.Encrypt)
             msg = WeixinMsg(xml)
-        
+
         assert msg.ToUserName == 'fromUser'
         assert msg.FromUserName == 'toUser'
         assert msg.CreateTime.isdigit()
-        
+
         assert msg.MsgType == 'text'
         assert msg.Content == 'hello'
 
     def assert_req_msg(req):
+        if config.cryptor:
+            xml = config.cryptor.decrypt(msg.Encrypt)
+            msg = WeixinMsg(xml)
+
         assert req.message.ToUserName == 'toUser'
         assert req.message.FromUserName == 'fromUser'
         assert req.message.CreateTime == '123456789'
         assert req.message.MsgType == 'text'
         assert req.message.Content == 'hello'
         assert req.message.MsgId == '123456789'
-    
-    req = WeixinRequest(config, text_msg)
+
+    req = WeixinRequest(config, umsg)
 
     assert_req_msg(req)
-    
+
     req.render(Text, "hello")
     resp_msg = WeixinMsg(req.get_response_xml())
     assert_reply(resp_msg)
@@ -70,4 +74,3 @@ def test_request(config, msg):
     req.response(msg)
     resp_msg = WeixinMsg(req.get_response_xml())
     assert_reply(resp_msg)
-
