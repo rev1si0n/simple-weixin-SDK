@@ -2,7 +2,7 @@
 from .utils import get_timestamp
 
 
-def CDATA_escape(escape_s):
+def cdata_escape(escape_s):
     """
     转义xml的CDATA中的]]>
     偶然在一次测试下发现当CDATA中包含</xml>结束标签时也会导致微信非正常解析
@@ -15,13 +15,13 @@ def CDATA_escape(escape_s):
         return escape_s
 
 
-def _make_node (k, v):
+def _make_node(k, v):
     if v : return "<{node}><![CDATA[{value}]]></{node}>".format(node=k, value=v)
     # 空字符串
     return ""
 
 
-class _WeixinReply_ (dict):
+class BaseWeixinReply (dict):
 
     def __init__(self, from_msg):
         self['ToUserName'] = from_msg.FromUserName
@@ -29,12 +29,12 @@ class _WeixinReply_ (dict):
         self['CreateTime'] = int(get_timestamp())
 
 
-class TextReply(_WeixinReply_):
+class TextReply(BaseWeixinReply):
 
     def __init__(self, from_msg, content):
 
         super(TextReply, self).__init__ (from_msg)
-        self['Content'] = CDATA_escape(content)
+        self['Content'] = cdata_escape(content)
 
         xmlform = \
         "<xml>"\
@@ -48,7 +48,7 @@ class TextReply(_WeixinReply_):
         self.xml = xmlform.format(**self)
 
 
-class ImageReply(_WeixinReply_):
+class ImageReply(BaseWeixinReply):
 
     def __init__(self, from_msg, imageMediaId):
         super(ImageReply, self).__init__(from_msg)
@@ -68,7 +68,7 @@ class ImageReply(_WeixinReply_):
         self.xml = xmlform.format(**self)
 
 
-class VoiceReply(_WeixinReply_):
+class VoiceReply(BaseWeixinReply):
 
     def __init__(self, from_msg, voiceMediaId):
 
@@ -89,12 +89,12 @@ class VoiceReply(_WeixinReply_):
         self.xml = xmlform.format(**self)
 
 
-class VideoReply(_WeixinReply_):
+class VideoReply(BaseWeixinReply):
 
     def __init__(self, from_msg, videoMediaId, title=None, description=None):
 
-        title = CDATA_escape(title)
-        description = CDATA_escape(description)
+        title = cdata_escape(title)
+        description = cdata_escape(description)
 
         super(VideoReply, self).__init__ (from_msg)
         self['MediaId'] = mediaId
@@ -116,12 +116,12 @@ class VideoReply(_WeixinReply_):
         self.xml = xmlform.format(**self)
 
 
-class MusicReply(_WeixinReply_):
+class MusicReply(BaseWeixinReply):
 
     def __init__(self, from_msg, thumbMediaId, musicUrl=None, hqMusicUrl=None,  title=None, description=None):
 
-        title = CDATA_escape(title)
-        description = CDATA_escape(description)
+        title = cdata_escape(title)
+        description = cdata_escape(description)
 
         super(MusicReply, self).__init__(from_msg)
         self['ThumbMediaId'] = thumbMediaId
@@ -145,7 +145,7 @@ class MusicReply(_WeixinReply_):
         self.xml = xmlform.format(**self)
 
 
-class ArticleReply(_WeixinReply_):
+class ArticleReply(BaseWeixinReply):
 
     def __init__(self, from_msg, articles=[]):
 
@@ -166,8 +166,8 @@ class ArticleReply(_WeixinReply_):
                 a_title = article['Title']
                 a_desc = article['Description']
 
-                article['Title'] = CDATA_escape(a_title)
-                article['Description'] = CDATA_escape(a_desc)
+                article['Title'] = cdata_escape(a_title)
+                article['Description'] = cdata_escape(a_desc)
 
                 return article
 
