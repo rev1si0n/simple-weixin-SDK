@@ -107,7 +107,7 @@ class Client(object):
 
         return "video"
 
-    def make_request(self, path, method=None, params={}, data=None, with_token=False, raw_response=False, **kwargs):
+    def make_request(self, path, method=None, params=None, data=None, with_token=False, raw_response=False, **kwargs):
         """
         所有对微信服务器的请求都会经过这里
         path: 请求路径
@@ -117,6 +117,7 @@ class Client(object):
         with_token: 是否在GET参数中加上access_token
         kwargs: 其他传给requests的参数
         """
+        params = params or {}
         if with_token:
             # 如果请求需要token则在get参数中带上token
             token = self.get_access_token_from_db()
