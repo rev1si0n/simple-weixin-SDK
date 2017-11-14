@@ -18,7 +18,7 @@ __all__ = [
     'get_signature',
     'is_valid_request',
     'AttributeDict',
-    '_NULL_',
+    'AttrNone',
 ]
 
 
@@ -193,7 +193,7 @@ class AttributeDict(dict):
             pass
 
 
-class _NULL_(AttributeDict):
+class AttrNone(AttributeDict):
     """
     替代 None 对象
     这样即使访问到了未提供的属性或是key也不会抛出 AttributeError/ KeyError
