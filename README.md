@@ -75,7 +75,12 @@ def settings(request):
     """
     base_url = request.config.app_base_url
     content = "🔧" + make_link("点击进入设置", base_url + "/settings")
-    request.response(Text, content)
+    request.render(Text, content)
+
+    # or
+    # reply = Text(content)
+    # request.response(reply)
+
     return
 
 # ....
