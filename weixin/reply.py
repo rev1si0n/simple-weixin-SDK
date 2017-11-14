@@ -64,7 +64,7 @@ class TextReply(BaseWeixinReply):
 class ImageReply(BaseWeixinReply):
 
     def __init__(self, media_id):
-        super(TextReply, self).__init__()
+        super(ImageReply, self).__init__()
 
         self['MediaId'] = media_id
 
@@ -86,7 +86,7 @@ class ImageReply(BaseWeixinReply):
 class VoiceReply(BaseWeixinReply):
 
     def __init__(self, media_id):
-        super(TextReply, self).__init__()
+        super(VoiceReply, self).__init__()
 
         self['MediaId'] = media_id
 
@@ -108,7 +108,7 @@ class VoiceReply(BaseWeixinReply):
 class VideoReply(BaseWeixinReply):
 
     def __init__(self, media_id, title=None, description=None):
-        super(TextReply, self).__init__()
+        super(VideoReply, self).__init__()
 
         title = cdata_escape(title)
         description = cdata_escape(description)
@@ -136,7 +136,7 @@ class VideoReply(BaseWeixinReply):
 class MusicReply(BaseWeixinReply):
 
     def __init__(self, thumb_media_id, url=None, hq_url=None,  title=None, description=None):
-        super(TextReply, self).__init__()
+        super(MusicReply, self).__init__()
 
         title = cdata_escape(title)
         description = cdata_escape(description)
@@ -166,7 +166,7 @@ class MusicReply(BaseWeixinReply):
 class ArticleReply(BaseWeixinReply):
 
     def __init__(self, articles=None):
-        super(TextReply, self).__init__()
+        super(ArticleReply, self).__init__()
 
         self.articles = articles or []
 
@@ -226,8 +226,8 @@ class ArticleReply(BaseWeixinReply):
 class EncryptReply(BaseWeixinReply):
 
     def __init__(self, enctext, nonce, timestamp, signature):
-        super(TextReply, self).__init__()
-        
+        super(EncryptReply, self).__init__()
+
         self['Encrypt'] = enctext
         self['Nonce'] = nonce
         self['TimeStamp'] = timestamp
