@@ -4,7 +4,7 @@ from xml.parsers.expat import ExpatError
 from .utils import AttrNone
 from .session import Session
 from .parse import WeixinMsg
-from .reply import EncryptReply
+from .reply import EncryptReply, BaseWeixinReply
 
 
 class WeixinRequest(object):
@@ -69,19 +69,30 @@ class WeixinRequest(object):
 
         return self._weixin_msg_
 
-    def response(self, template, *args, **kwargs):
+    def _build_msg(self, msg):
+        if isinstance(msg, BaseWeixinReply):
+            if not msg._marked:
+                msg.postmark(self.message)
+
+            if self.config.cryptor:
+                # 设置了消息加解密, 加密明文消息
+                kw = self.config.cryptor.encrypt(msg.xml)
+                msg = EncryptReply(**kw)
+
+            return msg
+
+    def render(self, template, *args, **kwargs):
         """
         使用模板渲染出xml, 模板来自 relpy.*, 会自动根据
         是否设定了cryptor来判断是否需要将消息加密
         """
-        t = template(self.message, *args, **kwargs)
-        if self.config.cryptor:
-            # 设置了消息加解密, 加密明文消息
-            kw = self.config.cryptor.encrypt(t.xml)
-            t = EncryptReply(**kw)
+        msg = template(*args, **kwargs)
 
-        self._response_xml_ = t.xml
+        self._response_xml_ = self._build_msg(msg).xml
         return
+
+    def response(self, msg):
+        self._response_xml_ = self._build_msg(msg).xml
 
     def get_response_xml(self, default=None):
         """

@@ -1,5 +1,5 @@
 # encoding=utf-8
-from .utils import get_timestamp
+from .utils import get_timestamp, join_sequence
 
 
 def cdata_escape(escape_s):
@@ -21,142 +21,164 @@ def _make_node(k, v):
     return ""
 
 
-class BaseWeixinReply (dict):
+class BaseWeixinReply(dict):
 
-    def __init__(self, from_msg):
+    def __init__(self):
+        self._marked = False
+
+    def postmark(self, from_msg, created=None):
         self['ToUserName'] = from_msg.FromUserName
         self['FromUserName'] = from_msg.ToUserName
-        self['CreateTime'] = int(get_timestamp())
+        self['CreateTime'] = created or int(get_timestamp())
+        self._marked = True
+
+    def _generate(self):
+        raise NotImplementedError
+
+    @property
+    def xml(self):
+        # generate xml
+        return self._generate()
 
 
 class TextReply(BaseWeixinReply):
 
-    def __init__(self, from_msg, content):
+    def __init__(self, content):
+        super(TextReply, self).__init__()
 
-        super(TextReply, self).__init__ (from_msg)
         self['Content'] = cdata_escape(content)
 
-        xmlform = \
-        "<xml>"\
-            "<ToUserName><![CDATA[{ToUserName}]]></ToUserName>"\
-            "<FromUserName><![CDATA[{FromUserName}]]></FromUserName>"\
-            "<CreateTime>{CreateTime}</CreateTime>"\
-            "<MsgType><![CDATA[text]]></MsgType>"\
-            "<Content><![CDATA[{Content}]]></Content>"\
-        "</xml>"
+    def _generate(self):
+        template = \
+            "<xml>" \
+            "<ToUserName><![CDATA[{ToUserName}]]></ToUserName>" \
+            "<FromUserName><![CDATA[{FromUserName}]]></FromUserName>" \
+            "<CreateTime>{CreateTime}</CreateTime>" \
+            "<MsgType><![CDATA[text]]></MsgType>" \
+            "<Content><![CDATA[{Content}]]></Content>" \
+            "</xml>"
 
-        self.xml = xmlform.format(**self)
+        return template.format(**self)
 
 
 class ImageReply(BaseWeixinReply):
 
-    def __init__(self, from_msg, imageMediaId):
-        super(ImageReply, self).__init__(from_msg)
-        self['MediaId'] = mediaId
+    def __init__(self, media_id):
+        super(TextReply, self).__init__()
 
-        xmlform = \
-        "<xml>"\
-            "<ToUserName><![CDATA[{ToUserName}]]></ToUserName>"\
-            "<FromUserName><![CDATA[{FromUserName}]]></FromUserName>"\
-            "<CreateTime>{CreateTime}</CreateTime>"\
-            "<MsgType><![CDATA[image]]></MsgType>"\
-            "<Image>"\
-                "<MediaId><![CDATA[{MediaId}]]></MediaId>"\
-            "</Image>"\
-        "</xml>"
+        self['MediaId'] = media_id
 
-        self.xml = xmlform.format(**self)
+    def _generate(self):
+        template = \
+            "<xml>" \
+            "<ToUserName><![CDATA[{ToUserName}]]></ToUserName>" \
+            "<FromUserName><![CDATA[{FromUserName}]]></FromUserName>" \
+            "<CreateTime>{CreateTime}</CreateTime>" \
+            "<MsgType><![CDATA[image]]></MsgType>" \
+            "<Image>" \
+            "<MediaId><![CDATA[{MediaId}]]></MediaId>" \
+            "</Image>" \
+            "</xml>"
+
+        return template.format(**self)
 
 
 class VoiceReply(BaseWeixinReply):
 
-    def __init__(self, from_msg, voiceMediaId):
+    def __init__(self, media_id):
+        super(TextReply, self).__init__()
 
-        super(VoiceReply, self).__init__(from_msg)
-        self['MediaId'] = mediaId
+        self['MediaId'] = media_id
 
-        xmlform = \
-        "<xml>"\
-            "<ToUserName><![CDATA[{ToUserName}]]></ToUserName>"\
-            "<FromUserName><![CDATA[{FromUserName}]]></FromUserName>"\
-            "<CreateTime>{CreateTime}</CreateTime>"\
-            "<MsgType><![CDATA[voice]]></MsgType>"\
-            "<Voice>"\
-                "<MediaId><![CDATA[{MediaId}]]></MediaId>"\
-            "</Voice>"\
-        "</xml>"
+    def _generate(self):
+        template = \
+            "<xml>" \
+            "<ToUserName><![CDATA[{ToUserName}]]></ToUserName>" \
+            "<FromUserName><![CDATA[{FromUserName}]]></FromUserName>" \
+            "<CreateTime>{CreateTime}</CreateTime>" \
+            "<MsgType><![CDATA[voice]]></MsgType>" \
+            "<Voice>" \
+            "<MediaId><![CDATA[{MediaId}]]></MediaId>" \
+            "</Voice>" \
+            "</xml>"
 
-        self.xml = xmlform.format(**self)
+        return template.format(**self)
 
 
 class VideoReply(BaseWeixinReply):
 
-    def __init__(self, from_msg, videoMediaId, title=None, description=None):
+    def __init__(self, media_id, title=None, description=None):
+        super(TextReply, self).__init__()
 
         title = cdata_escape(title)
         description = cdata_escape(description)
 
-        super(VideoReply, self).__init__ (from_msg)
-        self['MediaId'] = mediaId
-        self['TitleNode'] = _make_node ("Title", title)
-        self['DescriptionNode'] = _make_node ("Description", description)
+        self['MediaId'] = media_id
+        self['TitleNode'] = _make_node("Title", title)
+        self['DescriptionNode'] = _make_node("Description", description)
 
-        xmlform = \
-        "<xml>"\
-            "<ToUserName><![CDATA[{ToUserName}]]></ToUserName>"\
-            "<FromUserName><![CDATA[{FromUserName}]]></FromUserName>"\
-            "<CreateTime>{CreateTime}</CreateTime>"\
-            "<MsgType><![CDATA[video]]></MsgType>"\
-            "<Video>"\
-                "<MediaId><![CDATA[{MediaId}]]></MediaId>"\
-                "{TitleNode}{DescriptionNode}"\
-            "</Video>"\
-        "</xml>"\
+    def _generate(self):
+        template = \
+            "<xml>" \
+            "<ToUserName><![CDATA[{ToUserName}]]></ToUserName>" \
+            "<FromUserName><![CDATA[{FromUserName}]]></FromUserName>" \
+            "<CreateTime>{CreateTime}</CreateTime>" \
+            "<MsgType><![CDATA[video]]></MsgType>" \
+            "<Video>" \
+            "<MediaId><![CDATA[{MediaId}]]></MediaId>" \
+            "{TitleNode}{DescriptionNode}" \
+            "</Video>" \
+            "</xml>"
 
-        self.xml = xmlform.format(**self)
+        return template.format(**self)
 
 
 class MusicReply(BaseWeixinReply):
 
-    def __init__(self, from_msg, thumbMediaId, musicUrl=None, hqMusicUrl=None,  title=None, description=None):
+    def __init__(self, thumb_media_id, url=None, hq_url=None,  title=None, description=None):
+        super(TextReply, self).__init__()
 
         title = cdata_escape(title)
         description = cdata_escape(description)
 
-        super(MusicReply, self).__init__(from_msg)
-        self['ThumbMediaId'] = thumbMediaId
+        self['ThumbMediaId'] = thumb_media_id
         self['TitleNode'] = _make_node ("Title", title)
         self['DescriptionNode'] = _make_node ("Description", description)
-        self['MusicUrlNode'] = _make_node ("MusicUrl", musicUrl)
-        self['HQMusicUrlNode'] = _make_node ("HQMusicUrl", hqMusicUrl)
+        self['MusicUrlNode'] = _make_node ("MusicUrl", url)
+        self['HQMusicUrlNode'] = _make_node ("HQMusicUrl", hq_url)
 
-        xmlform = \
-        "<xml>"\
-            "<ToUserName><![CDATA[{ToUserName}]]></ToUserName>"\
-            "<FromUserName><![CDATA[{FromUserName}]]></FromUserName>"\
-            "<CreateTime>{CreateTime}</CreateTime>"\
-            "<MsgType><![CDATA[music]]></MsgType>"\
-            "<Music>"\
-                "{TitleNode}{DescriptionNode}{MusicUrlNode}{HQMusicUrlNode}"\
-                "<ThumbMediaId><![CDATA[{ThumbMediaId}]]></ThumbMediaId>"\
-            "</Music>"\
-        "</xml>"
+    def _generate(self):
+        template = \
+            "<xml>" \
+            "<ToUserName><![CDATA[{ToUserName}]]></ToUserName>" \
+            "<FromUserName><![CDATA[{FromUserName}]]></FromUserName>" \
+            "<CreateTime>{CreateTime}</CreateTime>" \
+            "<MsgType><![CDATA[music]]></MsgType>" \
+            "<Music>" \
+            "{TitleNode}{DescriptionNode}{MusicUrlNode}{HQMusicUrlNode}" \
+            "<ThumbMediaId><![CDATA[{ThumbMediaId}]]></ThumbMediaId>" \
+            "</Music>" \
+            "</xml>"
 
-        self.xml = xmlform.format(**self)
+        return template.format(**self)
 
 
 class ArticleReply(BaseWeixinReply):
 
-    def __init__(self, from_msg, articles=[]):
+    def __init__(self, articles=None):
+        super(TextReply, self).__init__()
 
+        self.articles = articles or []
+
+    def _generate(self):
         def make_item(articles):
             item = \
-            "<item>"\
-                "<Title><![CDATA[{Title}]]></Title>"\
-                "<Description><![CDATA[{Description}]]></Description>"\
-                "<PicUrl><![CDATA[{PicUrl}]]></PicUrl>"\
-                "<Url><![CDATA[{Url}]]></Url>"\
-            "</item>"
+                "<item>" \
+                "<Title><![CDATA[{Title}]]></Title>" \
+                "<Description><![CDATA[{Description}]]></Description>" \
+                "<PicUrl><![CDATA[{PicUrl}]]></PicUrl>" \
+                "<Url><![CDATA[{Url}]]></Url>" \
+                "</item>"
 
             def set_default(article):
                 article.setdefault("Description", "")
@@ -171,42 +193,59 @@ class ArticleReply(BaseWeixinReply):
 
                 return article
 
-            return "".join (item.format(**set_default(_)) for _ in articles)
+            return join_sequence(
+                item.format(**set_default(ar)) for ar in articles
+            )
 
-        super(ArticleReply, self).__init__(from_msg)
-        self['Articles'] = make_item(articles)
-        self['Count'] = len (articles)
+        self['Articles'] = make_item(self.articles)
+        self['Count'] = len(self.articles)
 
-        xmlform = \
-        "<xml>"\
-            "<ToUserName><![CDATA[{ToUserName}]]></ToUserName>"\
-            "<FromUserName><![CDATA[{FromUserName}]]></FromUserName>"\
-            "<CreateTime>{CreateTime}</CreateTime>"\
-            "<MsgType><![CDATA[news]]></MsgType>"\
-            "<ArticleCount>{Count}</ArticleCount>"\
-            "<Articles>{Articles}</Articles>"\
-        "</xml>"
+        template = \
+            "<xml>" \
+            "<ToUserName><![CDATA[{ToUserName}]]></ToUserName>" \
+            "<FromUserName><![CDATA[{FromUserName}]]></FromUserName>" \
+            "<CreateTime>{CreateTime}</CreateTime>" \
+            "<MsgType><![CDATA[news]]></MsgType>" \
+            "<ArticleCount>{Count}</ArticleCount>" \
+            "<Articles>{Articles}</Articles>" \
+            "</xml>"
 
-        self.xml = xmlform.format(**self)
+        return template.format(**self)
+
+    def add_article(self, title, description=None, url=None, image_url=None):
+        ar = dict()
+
+        ar['Title'] = title
+        if url: ar['Url'] = url
+        if image_url: ar['PicUrl'] = image_url
+        if description: ar['Description'] = description
+
+        self.articles.append(ar)
 
 
-class EncryptReply(dict):
+class EncryptReply(BaseWeixinReply):
 
     def __init__(self, enctext, nonce, timestamp, signature):
+        super(TextReply, self).__init__()
+        
         self['Encrypt'] = enctext
         self['Nonce'] = nonce
         self['TimeStamp'] = timestamp
         self['MsgSignature'] = signature
 
-        xmlform = \
-        "<xml>"\
-            "<Encrypt><![CDATA[{Encrypt}]]></Encrypt>"\
-            "<MsgSignature><![CDATA[{MsgSignature}]]></MsgSignature>"\
-            "<TimeStamp>{TimeStamp}</TimeStamp>"\
-            "<Nonce><![CDATA[{Nonce}]]></Nonce>"\
-        "</xml>"
+    def postmark(self, from_msg):
+        self._marked = True
 
-        self.xml = xmlform.format(**self)
+    def _generate(self):
+        template = \
+            "<xml>"\
+            "<Encrypt><![CDATA[{Encrypt}]]></Encrypt>" \
+            "<MsgSignature><![CDATA[{MsgSignature}]]></MsgSignature>" \
+            "<TimeStamp>{TimeStamp}</TimeStamp>" \
+            "<Nonce><![CDATA[{Nonce}]]></Nonce>" \
+            "</xml>"
+
+        return template.format(**self)
 
 
 class CustomMsgReply(object):
@@ -222,49 +261,49 @@ class CustomMsgReply(object):
         }
 
     @staticmethod
-    def image(openid, mediaId):
+    def image(openid, media_id):
         return {
             "touser": openid,
             "msgtype": "image",
             "image": {
-                "media_id": mediaId
+                "media_id": media_id
             }
         }
 
     @staticmethod
-    def voice(openid, mediaId):
+    def voice(openid, media_id):
         return  {
             "touser": openid,
             "msgtype": "voice",
             "voice": {
-                  "media_id": mediaId
+                  "media_id": media_id
             }
         }
 
     @staticmethod
-    def video(openid, mediaId, thumbMediaId=None, title=None, desc=None):
+    def video(openid, media_id, thumb_media_id=None, title=None, desc=None):
         return {
             "touser": openid,
             "msgtype": "video",
             "video": {
-                "media_id": mediaId,
-                "thumb_media_id": thumbMediaId,
+                "media_id": media_id,
+                "thumb_media_id": thumb_media_id,
                 "title": title,
                 "description": desc
             }
         }
 
     @staticmethod
-    def music(openid, musicUrl, hqMusicUrl, thumbMediaId, title=None, desc=None):
+    def music(openid, url, hq_url, thumb_media_id, title=None, desc=None):
         return {
             "touser": openid,
             "msgtype": "music",
             "music": {
                 "title": title,
                 "description": desc,
-                "musicurl": musicUrl,
-                "hqmusicurl": hqMusicUrl,
-                "thumb_media_id": thumbMediaId
+                "musicurl": url,
+                "hqmusicurl": hq_url,
+                "thumb_media_id": thumb_media_id
             }
         }
 
