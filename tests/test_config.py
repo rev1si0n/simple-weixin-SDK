@@ -24,6 +24,11 @@ def test_config():
     assert config.a == 9
     assert config._p == 999
 
+    config = Config()
+    config.from_object(ConfigObject, lower_keys=True)
+    # 大写小写的A同时存在，配置被覆盖不做检查
+    assert config.b == 1
+    assert config._p == 999 
     
     config = Config()
     config.from_json('{"a": 0, "b": 1}')

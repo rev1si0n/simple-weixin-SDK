@@ -10,12 +10,14 @@ class Config(AttributeDict):
     基于字典类型, 扩展支持使用属性的方式访问（单层）
     初始化时支持传入字典或者任意关键词。
     """
-    def from_object(self, config_object):
+    def from_object(self, config_object, lower_keys=False):
         """
-        从配置类读取配置, 配置字段都必须为大写
+        从配置类读取配置, 会读取除__name__格式的所有属性。
         """
         for k in dir(config_object):
             if not k.startswith('__') and not k.endswith('__'):
+                if lower_keys:
+                    k = k.lower()
                 self[k] = getattr(config_object, k)
 
     def from_dict(self, config_dict):
