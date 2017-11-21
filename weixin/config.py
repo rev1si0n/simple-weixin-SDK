@@ -17,8 +17,10 @@ class Config(AttributeDict):
         for k in dir(config_object):
             if not k.startswith('__') and not k.endswith('__'):
                 if lower_keys:
-                    k = k.lower()
-                self[k] = getattr(config_object, k)
+                    tk = k.lower()
+                else:
+                    tk = k
+                self[tk] = getattr(config_object, k)
 
     def from_dict(self, config_dict):
         """
