@@ -49,7 +49,10 @@ class Session(BaseSession):
         self.storage = req.config.storage
 
         # 从数据库读取并加载会话信息
-        session = self.storage.get(self.session_id()) or {}
+        session = self.storage.get(
+            self.session_id(),
+            encoding="utf-8"
+        ) or {}
         self.dict.update(session)
 
     def session_id(self):
@@ -61,9 +64,11 @@ class Session(BaseSession):
         保存会话，必须在每次改变会话信息后调用
         否则会话不会被存入数据库, expires 代表会话存活秒数
         '''
-        self.storage.set(self.session_id(),
-                         self.dict,
-                         expires)
+        self.storage.set(
+            self.session_id(),
+            self.dict,
+            expires
+        )
 
     def destroy(self):
         '''销毁会话, 这将会清空当前字典与数据库内容
