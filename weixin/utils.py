@@ -1,6 +1,7 @@
 # encoding=utf-8
 import re
 import hashlib
+import json as _json
 import time as _time
 from random import choice
 
@@ -201,3 +202,19 @@ class AttrNone(AttributeDict):
 
     def __bool__(self):
         return not 1
+
+
+def json_dumps(py_dict, **kwargs):
+    """
+    生成JSON字符串, kwargs为 json.dumps 的关键词参数
+    """
+    kwargs.setdefault('ensure_ascii', False)
+    return _json.dumps(py_dict, **kwargs)
+
+
+def json_loads(json, **kwargs):
+    """
+    解析JSON字符串, kwargs为 json.loads 的关键词参数
+    """
+    return _json.loads(json, **kwargs)
+    
