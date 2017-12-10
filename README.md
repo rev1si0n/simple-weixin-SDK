@@ -1,5 +1,5 @@
 
-[![](https://img.shields.io/travis/LUSG/weixin-SDK/master.svg?label=Travis%20build)](https://travis-ci.org/LUSG/weixin-SDK)
+[![](https://img.shields.io/travis/thisforeda/weixin-SDK/master.svg?label=Travis%20build)](https://travis-ci.org/thisforeda/weixin-SDK)
 
 ## 开发版本
 
