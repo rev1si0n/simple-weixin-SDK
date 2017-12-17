@@ -66,9 +66,6 @@ class AESCipher:
         self.unpad = lambda s: s[:-s[-1]]
 
     def encrypt(self, raw, key=None, iv=None):
-        """
-        raw: 需要编码的数据
-        """
         raw = self.pad(raw)
         key, iv = key or self.key, iv or self.iv
 
@@ -76,9 +73,6 @@ class AESCipher:
         return base64_encode(cipher.encrypt(raw))
 
     def decrypt(self, enc, key=None, iv=None):
-        """
-        enc: base64编码的数据
-        """
         enc = base64_decode(enc)
         key, iv = key or self.key, iv or self.iv
 
@@ -87,14 +81,8 @@ class AESCipher:
 
 
 class XMLMsgCryptor(object):
-    """
-    微信消息加解密类
-    """
+
     def __init__(self, appid, token, enc_aeskey):
-        """
-        初始化时提供 appid, token, enc_aeskey
-        此类正常情况下用户无需接触
-        """
         pad = ("=" * (len(enc_aeskey) % 3))
         aeskey = base64_decode(enc_aeskey + pad)
 
@@ -103,9 +91,6 @@ class XMLMsgCryptor(object):
         self.cryptor = AESCipher(aeskey)
 
     def decrypt(self, enctext, appid_check=True):
-        """
-        解密消息
-        """
         text = self.cryptor.decrypt(enctext)
         # xml 内容的长度
         lenth = int.from_bytes(text[16:20], 'big')
@@ -113,9 +98,6 @@ class XMLMsgCryptor(object):
             # appid 检查，如果解密出来的appid与提供的不同，那么返回 None
             aid = text[lenth + 20:]
             if aid != self.appid:
-                """
-                解密消息中的appid不等于提供的appid, 触发异常
-                """
                 raise CryptorError(
                     "message appid %s not eq %s" % (aid, to_str(self.appid)))
 
@@ -124,15 +106,10 @@ class XMLMsgCryptor(object):
         return content
 
     def encrypt(self, xml):
-        """
-        加密消息, xml 为已经渲染好的原始xml
-        """
-
         # 先将xml转换为字节，否则当内容含有多字节字符时会导致len计数错误
         xml = to_bytes(xml)
 
         blenth = int.to_bytes(len(xml), 4, 'big')
-
         seq = join_sequence(map(to_bytes, [get_nonce(16), blenth, xml, self.appid]))
         enctext = self.cryptor.encrypt(seq)
         enctext = to_str(enctext)
@@ -140,7 +117,6 @@ class XMLMsgCryptor(object):
         # 加密后的内容, bytes Type
         nonce = get_nonce(5)
         timestamp = get_timestamp()
-
         sig = get_signature(self.token, nonce, timestamp, enctext)
 
         # 返回的字典供 reply.EncryptReply 使用

@@ -24,16 +24,10 @@ __all__ = [
 
 
 def get_timestamp():
-    '''
-    获取当前时间戳
-    '''
     return _time.time()
 
 
 def make_link(title, link):
-    '''
-    生成微信消息超链接的a标签
-    '''
     h_tag = '<a href="%s">%s</a>' % (link, title)
     return h_tag
 
@@ -64,10 +58,6 @@ binarify = to_bytes
 
 
 def join_sequence(seq):
-    '''
-    "".join(...)的函数式，因为我并不喜欢代码中出现太多的这种格式。
-    所以写此作为代替。接收list与tuple类型的字符串/字节序列
-    '''
     seq = list(seq)
     return type(seq[0])().join(seq)
 
@@ -75,9 +65,6 @@ mix_seq = join_sequence
 
 
 def get_nonce(length):
-    '''
-    返回一个随机字符串，length 代表随机字符串长度。
-    '''
     table = '0123456789'\
             'abcdefghijklmnopqrstuvwxyz'\
             'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -87,9 +74,6 @@ def get_nonce(length):
 
 
 def get_signature(*args):
-    '''
-    获取给定不定量参数的sha1 signature，参数可以同时是str/bytes
-    '''
     args = sorted(map(to_bytes, args))
     sha1 = hashlib.sha1(join_sequence(args))
 
@@ -97,20 +81,11 @@ def get_signature(*args):
 
 
 def is_valid_request(token, nonce, timestamp, signature):
-    """
-    检查请求是否符合要求
-    即查询字符串包含 nonce,timestamp,signature 且通过校验
-    """
     sig = get_signature(token, nonce, timestamp)
-
     return sig == signature
 
 
 def parse_rfc1738_args(url):
-    """
-    解析数据库url,
-    正则表达式来自 sqlalchemy.
-    """
     pattern = re.compile(r'''
             (?P<name>[\w\+]+)://
             (?:
@@ -141,15 +116,8 @@ def parse_rfc1738_args(url):
 
 
 class AttributeDict(dict):
-    """
-    增加属性访问的字典, 仅支持单层字典的属性访问
-    """
 
     def __getattr__(self, key):
-        """
-        提供属性访问方法
-        如果属性在字典中不存在, 返回 None
-        """
         try:
             # 尝试读取字典key
             return super(AttributeDict, self).__getitem__(key)
@@ -157,37 +125,21 @@ class AttributeDict(dict):
             pass
 
     def __getitem__(self, key):
-        """
-        普通字典方式访问
-        如果key不存在也不会抛出KeyError
-        """
         try:
             return super(AttributeDict, self).__getitem__(key)
         except KeyError:
             pass
 
     def set(self, key, value):
-        """
-        设置一个属性
-        多次设置相同属性会覆盖, 且无提示
-        """
         super(AttributeDict, self).__setitem__(key, value)
 
     __setattr__ = set
 
     def setnx(self, key, value):
-        """
-        仅当属性不存在时设置属性
-        setnx = set when not exist
-        """
         if not self.__getitem__(key):
             self.set(key, value)
 
     def remove(self, key):
-        """
-        删除一个key/属性
-        不论是否存在key, 无返回值
-        """
         try:
             self.__delitem__(key)
         except KeyError:
@@ -195,26 +147,15 @@ class AttributeDict(dict):
 
 
 class AttrNone(AttributeDict):
-    """
-    替代 None 对象
-    这样即使访问到了未提供的属性或是key也不会抛出 AttributeError/ KeyError
-    """
 
     def __bool__(self):
         return not 1
 
 
 def json_dumps(py_dict, **kwargs):
-    """
-    生成JSON字符串, kwargs为 json.dumps 的关键词参数
-    """
     kwargs.setdefault('ensure_ascii', False)
     return _json.dumps(py_dict, **kwargs)
 
 
 def json_loads(json, **kwargs):
-    """
-    解析JSON字符串, kwargs为 json.loads 的关键词参数
-    """
     return _json.loads(json, **kwargs)
-    

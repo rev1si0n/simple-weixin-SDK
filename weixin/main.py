@@ -13,9 +13,6 @@ __all__ = ['Weechat',]
 class Weechat(object):
 
     def __init__(self, token=None, appid=None, appsec=None, enc_aeskey=None):
-        """
-        最主要的类, 保存应用的各种配置信息以及路由信息, 且负责各种类型消息的路由
-        """
         self.config = Config()
 
         # 存储token, appid, appsec
@@ -27,19 +24,14 @@ class Weechat(object):
         default = lambda req: None
 
         self.handlers = dict()
-
         # 未知消息类型的处理器
         self.default = default
-
         # 关键字处理器数组
         self.text_filter_handlers = []
         # 默认关键字无匹配处理器
         self.text_filter_default = default
 
     def initialize(self):
-        """
-        初始化配置，此方法必须在make_handler中调用
-        """
         appid = self.config.appid
         token = self.config.token
         enc_aeskey = self.config.enc_aeskey
@@ -48,9 +40,6 @@ class Weechat(object):
             raise Exception("appid or token not set!")
 
         if enc_aeskey:
-            ##
-            # 设置了消息加解密密钥, 实例化一个消息cryptor
-            ##
             self.add_config("cryptor", XMLMsgCryptor(
                     appid=appid,
                     token=token,
@@ -59,21 +48,12 @@ class Weechat(object):
             )
 
         if self.config.storage is None:
-            ##
-            # 未设置存储器, 设置默认sqlite3存储器, 文件以appid命名
-            ##
             sqlite_file = "weixin.%s.sqlite3" % appid
             storage = Sqlite3Storage(uri=sqlite_file)
             self.set_storage(storage)
 
     def add_config(self, key, value):
         """
-        添加全局设置
-
-        可以添加全局参数, 在处理器中可以访问, 主要是省去了有些多个文件中需要导入某些
-        如数据库连接的比较麻烦的方法
-
-        !! 重复添加相同名称的属性会导致覆盖
         >>> app.add_config('sqlconn', DB_CONNECTION)
         >>> ...
         >>>
@@ -110,9 +90,6 @@ class Weechat(object):
         return
 
     def get_base_handler(self, key_list):
-        """
-        根据消息key列表找出对应的处理器，如果没找到则返回的是默认处理器
-        """
         for k in key_list:
             k = self.uniform(k)
             h = self.handlers.get(k, None)
@@ -255,19 +232,9 @@ class Weechat(object):
             "filter is not list, str or re_pattern.")
 
     def text_filter(self, kw_filter):
-        """
-        为文本关键词注册一个处理器,
-        需要注意, 此装饰器请勿与self.text同时使用, 因为此装饰器会注册
-        一个处理text处理器来进行关键词的路由
-        """
         filter_ = self._compile_text_filter(kw_filter)
 
         def register(function):
-            """
-            注册关键词处理函数, 因为需要截获文本消息来匹配关键词, 所以这里会
-            自动生成一个处理text类型消息的处理器, 所以当使用关键词时, 你不可以再使用
-            Weechat.text 类型装饰器。
-            """
             self.text_filter_handlers.append((filter_, function))
 
             @self.text
@@ -290,32 +257,20 @@ class Weechat(object):
         return register
 
     def as_text_filter_default(self, function):
-        """
-        设置默认的关键词处理器（无匹配关键词时）
-        """
         self.text_filter_default = function
         return function
 
     def on_finish(self, function):
-        """
-        每次请求结束后调用（注意只是消息渲染完成, 并不是消息已发送）, 不可做耗时工作
-        被装饰方法同样可以获取到request, 返回值会被忽略
-        """
         self.add_base_handler("_on_finish_", function)
         return function
 
     def _get_msg_handler_key(self, message):
-        """
-        依据消息中的MsgType信息合成获取对应handler的key
-        """
         mtype = self.uniform(message.MsgType)
         if mtype and mtype == self.uniform("EVENT"):
             ev = self.uniform(message.Event)
-
             main_h_key = "EVENT_%s" % ev
             # 这几个事件都是有一个固定key的, 所以直接拼接成
             # 给主路由获取处理器用的key
-
             if ev in ("CLICK", "SCAN",) and message.EventKey:
                 ev_key = self.uniform(message.EventKey)
                 sub_h_key = "EVENT_%s_%s" % (ev, ev_key)

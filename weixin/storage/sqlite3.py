@@ -16,9 +16,6 @@ class Sqlite3Storage(SqlStorageBase):
                     return self
 
                 def __exit__(self, *exc_info):
-                    """
-                    自动提交
-                    """
                     del exc_info
                     database.commit()
                     self.close()
@@ -29,9 +26,6 @@ class Sqlite3Storage(SqlStorageBase):
         self._create_table()
 
     def _create_table(self):
-        """
-        创建数据表
-        """
         with self.database.cursor(self.Cursor) as cursor:
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS storage
@@ -42,13 +36,7 @@ class Sqlite3Storage(SqlStorageBase):
             );""")
 
     def _translate_blob(self, data):
-        """
-        转义blob字段, sqlite3
-        """
         return memoryview(data)
 
     def _escape_sql_args_formatter(self, statement):
-        """
-        转义sql语句中的参数格式化符号
-        """
         return statement

@@ -3,12 +3,6 @@ from .utils import get_timestamp, join_sequence
 
 
 def cdata_escape(escape_s):
-    """
-    转义xml的CDATA中的]]>
-    偶然在一次测试下发现当CDATA中包含</xml>结束标签时也会导致微信非正常解析
-    即如果CDATA内容为 <![CDATA[你😫</xml>(⊙﹏⊙)]]>，用户收到的内容却为
-    你😫</root>, 且此结束标签只在全小写状态下会导致这种情况。
-    """
     if escape_s is not None:
         escape_s = escape_s.replace("]]>", ']]&gt;')
         escape_s = escape_s.replace("</xml>", '</xml&gt;')

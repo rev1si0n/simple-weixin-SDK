@@ -29,9 +29,6 @@ class MySQLStorage(SqlStorageBase):
         self._create_table()
 
     def _create_table(self):
-        """
-        创建数据表
-        """
         with self.database.cursor(self.Cursor) as cursor:
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS `storage` (
@@ -42,13 +39,7 @@ class MySQLStorage(SqlStorageBase):
                 ) DEFAULT CHARACTER SET = utf8mb4;""")
 
     def _translate_blob(self, data):
-        """
-        转义blob字段, pymysql直接返回二进制数据
-        """
         return data
 
     def _escape_sql_args_formatter(self, statement):
-        """
-        转义sql语句中的参数格式化符号
-        """
         return statement.replace("?", "%s")
