@@ -63,7 +63,7 @@ class AESCipher:
         self.iv = iv
         self.key = key
         self.pad = pad
-        self.unpad = lambda s: s[:-ord(s[len(s) - 1:])]
+        self.unpad = lambda s: s[:-s[-1]]
 
     def encrypt(self, raw, key=None, iv=None):
         """
